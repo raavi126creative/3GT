@@ -1,2 +1,12 @@
-# 3GT
-A Python-based financial automation engine built for Sector 1 logistics firms. Designed to integrate with ULIP, eliminating manual delays and reducing high-cost 90-day billing cycles down to 15 days to recover trapped working capital.
+# 3GT: Logistics Liquidity Engine
+
+## Mission
+To eliminate manual invoicing bottlenecks in the logistics sector, slashing payment cycles from 90 days to 15 days and unlocking crores in trapped working capital.
+
+## Architecture
+- `/data_parser`: Handles raw freight and shipping manifest ingestion.
+- `/invoice_engine`: Core automation scripts interfacing with ULIP.
+- `/reporting`: Financial calculators demonstrating liquidity recovery and opportunity cost.
+
+## Objective (Pilot Phase)
+Demonstrate tangible cost-of-capital savings to mid-sized logistics firms in Pune/Chakan via a 14-day zero-cost data audit.
