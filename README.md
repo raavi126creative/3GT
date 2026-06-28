@@ -1,12 +1,17 @@
 # 3GT: Logistics Liquidity Engine
 
-## Mission
-To eliminate manual invoicing bottlenecks in the logistics sector, slashing payment cycles from 90 days to 15 days and unlocking crores in trapped working capital.
+## Project Overview
+This module estimates the financial impact of delayed logistics invoice payments by calculating lost opportunity costs and potential capital recovery if payments are streamlined to a 15-day cycle.
 
-## Architecture
-- `/data_parser`: Handles raw freight and shipping manifest ingestion.
-- `/invoice_engine`: Core automation scripts interfacing with ULIP.
-- `/reporting`: Financial calculators demonstrating liquidity recovery and opportunity cost.
+## Project Structure
+- `cost.py`: Core calculation engine.
+- `requirements.txt`: Required Python dependencies.
+- `logistics_invoices.csv`: Input data (format: Invoice_ID, Invoice_Amount, Submission_Date, Payment_Received_Date).
 
-## Objective (Pilot Phase)
-Demonstrate tangible cost-of-capital savings to mid-sized logistics firms in Pune/Chakan via a 14-day zero-cost data audit.
+## Getting Started
+1. Clone this repository.
+2. Install dependencies:
+   `pip install -r requirements.txt`
+3. Run the engine:
+   `python cost.py`
+   
