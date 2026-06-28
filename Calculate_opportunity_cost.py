@@ -1,72 +1,105 @@
+```python
 """
-Opportunity Cost Calculator for Delayed Logistics Payments
+===============================================================================
+Project : 3GT: Logistics Liquidity Engine
+Module  : calculate_opportunity_cost.py
 
-Formula Used:
-Lost Opportunity Cost =
-Invoice Amount × Annual Interest Rate × (Days Taken to Pay / 365)
+Purpose:
+--------
+This module estimates the financial impact of delayed logistics invoice
+payments by calculating:
 
-Author: Your Name
+1. Days Taken to Receive Payment
+2. Lost Opportunity Cost (Simple Interest @ 12% p.a.)
+3. Potential Capital Recovery if every invoice were paid within 15 days.
+
+The report is designed for business presentations and pilot demonstrations.
+
+Author : Your Name
+Version: 1.0
+===============================================================================
 """
 
 import os
 import pandas as pd
 
 
-# ---------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------
-INTEREST_RATE = 0.12  # 12% annual simple interest
-INPUT_FILE = "logistics_payments.csv"
-OUTPUT_FILE = "logistics_payments_with_opportunity_cost.csv"
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+ANNUAL_INTEREST_RATE = 0.12      # 12% Annual Simple Interest
+TARGET_PAYMENT_DAYS = 15         # Desired billing cycle
+
+INPUT_FILE = "logistics_invoices.csv"
+OUTPUT_FILE = "logistics_invoice_analysis.csv"
 
 
-# ---------------------------------------------------------------------
-# Dummy Data Generator
-# ---------------------------------------------------------------------
-def generate_dummy_data(filename):
-    """Generate sample invoice data for testing."""
+# =============================================================================
+# DUMMY DATA GENERATOR
+# =============================================================================
 
-    data = {
+def generate_dummy_data(filename: str) -> None:
+    """
+    Creates sample logistics invoice data.
+
+    This allows the module to run immediately without requiring
+    an external CSV file.
+    """
+
+    sample_data = {
         "Invoice_ID": [
             "INV001",
             "INV002",
             "INV003",
             "INV004",
-            "INV005"
+            "INV005",
+            "INV006"
         ],
+
         "Invoice_Amount": [
             150000,
-            250000,
-            180000,
-            320000,
-            275000
+            225000,
+            340000,
+            175000,
+            420000,
+            260000
         ],
+
         "Submission_Date": [
             "2025-01-01",
-            "2025-01-10",
+            "2025-01-08",
+            "2025-01-18",
             "2025-02-01",
-            "2025-02-15",
+            "2025-02-10",
             "2025-03-01"
         ],
+
         "Payment_Received_Date": [
-            "2025-01-31",
-            "2025-02-25",
-            "2025-03-15",
-            "2025-04-20",
-            "2025-05-05"
+            "2025-01-30",
+            "2025-02-22",
+            "2025-03-12",
+            "2025-03-18",
+            "2025-04-15",
+            "2025-04-22"
         ]
     }
 
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
-    print(f"Dummy data created: {filename}")
+    pd.DataFrame(sample_data).to_csv(filename, index=False)
+
+    print(f"Sample dataset created -> {filename}")
 
 
-# ---------------------------------------------------------------------
-# Load Data
-# ---------------------------------------------------------------------
-def load_data(filename):
-    """Load invoice data from CSV."""
+# =============================================================================
+# DATA LOADING
+# =============================================================================
+
+def load_invoice_data(filename: str) -> pd.DataFrame:
+    """
+    Reads invoice information from CSV.
+
+    Converts date columns into datetime objects for arithmetic.
+    """
 
     df = pd.read_csv(filename)
 
@@ -78,69 +111,142 @@ def load_data(filename):
     return df
 
 
-# ---------------------------------------------------------------------
-# Calculate Metrics
-# ---------------------------------------------------------------------
-def calculate_metrics(df, annual_interest_rate):
-    """Calculate payment duration and opportunity cost."""
+# =============================================================================
+# CALCULATION ENGINE
+# =============================================================================
 
+def calculate_financial_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculates:
+
+    1. Actual payment duration
+    2. Lost opportunity cost
+    3. Potential capital recovery if payment is reduced to 15 days
+    """
+
+    # Number of days customer took to pay
     df["Days_Taken_to_Pay"] = (
-        df["Payment_Received_Date"] -
-        df["Submission_Date"]
+        df["Payment_Received_Date"]
+        - df["Submission_Date"]
     ).dt.days
 
+    # Current opportunity cost
     df["Lost_Opportunity_Cost"] = (
         df["Invoice_Amount"]
-        * annual_interest_rate
+        * ANNUAL_INTEREST_RATE
         * df["Days_Taken_to_Pay"]
+        / 365
+    )
+
+    # Delay beyond target payment cycle
+    df["Excess_Delay_Days"] = (
+        df["Days_Taken_to_Pay"] - TARGET_PAYMENT_DAYS
+    ).clip(lower=0)
+
+    # Recoverable interest if delay is eliminated
+    df["Potential_Capital_Recovery"] = (
+        df["Invoice_Amount"]
+        * ANNUAL_INTEREST_RATE
+        * df["Excess_Delay_Days"]
         / 365
     )
 
     return df
 
 
-# ---------------------------------------------------------------------
-# Summary Report
-# ---------------------------------------------------------------------
-def print_summary(df):
-    """Print overall financial summary."""
+# =============================================================================
+# BUSINESS SUMMARY
+# =============================================================================
 
-    total_invoice_amount = df["Invoice_Amount"].sum()
-    average_days = df["Days_Taken_to_Pay"].mean()
-    total_opportunity_cost = df["Lost_Opportunity_Cost"].sum()
+def print_business_report(df: pd.DataFrame) -> None:
+    """
+    Prints a professional executive summary suitable for
+    management presentations.
+    """
 
-    print("\n" + "=" * 60)
-    print("LOGISTICS PAYMENT OPPORTUNITY COST SUMMARY")
-    print("=" * 60)
+    total_invoice = df["Invoice_Amount"].sum()
 
-    print(f"Total Invoiced Amount        : ₹{total_invoice_amount:,.2f}")
-    print(f"Average Days to Payment      : {average_days:.2f} days")
-    print(f"Total Lost Opportunity Cost  : ₹{total_opportunity_cost:,.2f}")
+    average_cycle = df["Days_Taken_to_Pay"].mean()
 
-    print("=" * 60)
+    total_recovery = df["Potential_Capital_Recovery"].sum()
+
+    total_opportunity = df["Lost_Opportunity_Cost"].sum()
+
+    print("\n")
+    print("=" * 78)
+    print("                     3GT: LOGISTICS LIQUIDITY ENGINE")
+    print("                FINANCIAL OPPORTUNITY ANALYSIS REPORT")
+    print("=" * 78)
+
+    print(f"{'Total Invoiced Amount':40} : ₹ {total_invoice:,.2f}")
+
+    print(f"{'Average Billing Cycle Duration':40} : {average_cycle:.2f} Days")
+
+    print(f"{'Total Lost Opportunity Cost':40} : ₹ {total_opportunity:,.2f}")
+
+    print(
+        f"{'Total Potential Capital Recovery':40} : ₹ {total_recovery:,.2f}"
+    )
+
+    print("-" * 78)
+
+    print(
+        "Business Insight:\n"
+        "If invoice collections are consistently reduced to a "
+        f"{TARGET_PAYMENT_DAYS}-day payment cycle, the organisation "
+        "could potentially recover the above financing cost that is "
+        "currently locked due to delayed customer payments."
+    )
+
+    print("=" * 78)
+    print()
 
 
-# ---------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------
+# =============================================================================
+# EXPORT RESULTS
+# =============================================================================
+
+def export_results(df: pd.DataFrame, filename: str) -> None:
+    """
+    Saves the detailed invoice analysis to CSV.
+    """
+
+    df.to_csv(filename, index=False)
+
+    print(f"Detailed analysis exported to: {filename}")
+
+
+# =============================================================================
+# MAIN APPLICATION
+# =============================================================================
+
 def main():
+    """
+    Main execution workflow.
+    """
 
+    # Automatically create sample data for demonstration
     if not os.path.exists(INPUT_FILE):
         generate_dummy_data(INPUT_FILE)
 
-    df = load_data(INPUT_FILE)
+    # Load invoice dataset
+    invoices = load_invoice_data(INPUT_FILE)
 
-    df = calculate_metrics(df, INTEREST_RATE)
+    # Perform financial calculations
+    invoices = calculate_financial_metrics(invoices)
 
-    df.to_csv(OUTPUT_FILE, index=False)
+    # Export detailed results
+    export_results(invoices, OUTPUT_FILE)
 
-    print_summary(df)
+    # Display executive summary
+    print_business_report(invoices)
 
-    print("\nDetailed results:")
-    print(df)
 
-    print(f"\nProcessed data saved to: {OUTPUT_FILE}")
-
+# =============================================================================
+# ENTRY POINT
+# =============================================================================
 
 if __name__ == "__main__":
     main()
+```
+    
